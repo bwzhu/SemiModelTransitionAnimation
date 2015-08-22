@@ -15,8 +15,7 @@
 @interface ViewController ()<UIViewControllerTransitioningDelegate>
 
 @property (nonatomic, strong) SemiModelAnimationController *animator;
-@property (nonatomic, strong) SemiModelAnimationController *animator1;
-@property (nonatomic, strong) SemiModelInteractiveTransition *transition;
+@property (nonatomic, strong) SemiModelInteractiveTransition *interactiveAnimator;
 
 @end
 
@@ -25,8 +24,15 @@
 - (instancetype)init
 {
     self = [super init];
-    if (self) {
-        self.modalPresentationStyle = UIModalPresentationFullScreen;
+    if (self)
+    {
+        //Present or dismiss animator
+        _animator = [SemiModelAnimationController new];
+        _animator.distanceFromTop = 200;
+        
+        //Pan gesture animator
+        _interactiveAnimator = [SemiModelInteractiveTransition new];
+        _interactiveAnimator.distanceFromTop = 200;
     }
     return self;
 }
@@ -34,16 +40,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    
-    _animator = [SemiModelAnimationController new];
-    _animator.distanceFromTop = 200;
-    
-    _animator1 = [SemiModelAnimationController new];
-    _animator1.reverse = YES;
-    _animator1.distanceFromTop = 200;
-    
-    _transition = [SemiModelInteractiveTransition new];
-    _transition.distanceFromTop = 200;
     
     self.view.backgroundColor = [UIColor redColor];
     
@@ -72,20 +68,23 @@
     [self presentViewController:vc animated:YES completion:nil];
 }
 
+#pragma mark - UIViewControllerTransitioningDelegate
 - (id <UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented presentingController:(UIViewController *)presenting sourceController:(UIViewController *)source
 {
-    [self.transition wireToViewController:presented];
+    [self.interactiveAnimator wireToViewController:presented];
+    self.animator.reverse = NO;
     return self.animator;
 }
 
 - (id <UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed
 {
-    return self.animator1;
+    self.animator.reverse = YES;
+    return self.animator;
 }
 
 - (id <UIViewControllerInteractiveTransitioning>)interactionControllerForDismissal:(id <UIViewControllerAnimatedTransitioning>)animator
 {
-    return self.transition.interactionInProgress ? self.transition : nil;
+    return self.interactiveAnimator.interactionInProgress ? self.interactiveAnimator : nil;
 }
 
 - (UIPresentationController *)presentationControllerForPresentedViewController:(UIViewController *)presented presentingViewController:(UIViewController *)presenting sourceViewController:(UIViewController *)source

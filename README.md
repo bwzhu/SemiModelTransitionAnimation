@@ -1,4 +1,4 @@
-# SawtoothTransitionAnimation
+# SemiModelTransition
 
 ###Screenshot 
 ![](Demo.gif)
@@ -10,54 +10,57 @@ Copy all files in `Classes` directory to your project
 ##Setup manually
 Initialization
 ```objc
-@property (nonatomic, strong) SawtoothAnimationController *animator;
-@property (nonatomic, strong) GateInteractiveTransition   *interactiveAnimator;
+@property (nonatomic, strong) SemiModelAnimationController *animator;
+@property (nonatomic, strong) SemiModelInteractiveTransition *interactiveAnimator;
 
 - (instancetype)init
 {
     self = [super init];
     if (self) {
-        //Push or pop animator
-        _animator = [SawtoothAnimationController new];
+        //Present or dismiss animator
+        _animator = [SemiModelAnimationController new];
+        _animator.distanceFromTop = 200;
         
-        //Pinch gesture animator
-        _interactiveAnimator = [GateInteractiveTransition new];
+        //Pan gesture animator
+        _interactiveAnimator = [SemiModelInteractiveTransition new];
+        _interactiveAnimator.distanceFromTop = 200;
     }
     return self;
 }
 ```
 
-Remember to set your instance as the navigation delegate:
+Remember to set the modalPresentationStyle of presentedController to UIModalPresentationCustom
 ```objc
-- (void)viewDidLoad {
-    [super viewDidLoad];    
-    self.navigationController.delegate = self;
-}
+self.modalPresentationStyle = UIModalPresentationCustom;
 ```
 
-Implement ```UINavigationControllerDelegate``` and this delegate method:
+Implement ```UIViewControllerTransitioningDelegate``` and this delegate method:
 ```objc
-- (id <UIViewControllerAnimatedTransitioning>)navigationController:(UINavigationController *)navigationController
-                                   animationControllerForOperation:(UINavigationControllerOperation)operation
-                                                fromViewController:(UIViewController *)fromVC
-                                                  toViewController:(UIViewController *)toVC
+- (id <UIViewControllerAnimatedTransitioning>)animationControllerForPresentedController:(UIViewController *)presented presentingController:(UIViewController *)presenting sourceController:(UIViewController *)source
 {
-    if (operation == UINavigationControllerOperationPush)
-    {
-        [self.interactiveAnimator wireToViewController:toVC];
-    }
-    self.animator.reverse = (operation != UINavigationControllerOperationPush);
+    [self.interactiveAnimator wireToViewController:presented];
+    self.animator.reverse = NO;
     return self.animator;
 }
 
-- (id <UIViewControllerInteractiveTransitioning>)navigationController:(UINavigationController *)navigationController
-                          interactionControllerForAnimationController:(id <UIViewControllerAnimatedTransitioning>) animationController
+- (id <UIViewControllerAnimatedTransitioning>)animationControllerForDismissedController:(UIViewController *)dismissed
 {
-    return (self.interactiveAnimator.interactionInProgress) ? self.interactiveAnimator : nil;
+    self.animator.reverse = YES;
+    return self.animator;
+}
+
+- (id <UIViewControllerInteractiveTransitioning>)interactionControllerForDismissal:(id <UIViewControllerAnimatedTransitioning>)animator
+{
+    return self.interactiveAnimator.interactionInProgress ? self.interactiveAnimator : nil;
+}
+
+- (UIPresentationController *)presentationControllerForPresentedViewController:(UIViewController *)presented presentingViewController:(UIViewController *)presenting sourceViewController:(UIViewController *)source
+{
+    return [[SemiModelPresentationController alloc] initWithPresentedViewController:presented presentingViewController:presenting];
 }
 ```
 
 ##Requirements
-iOS 7.0+
+iOS 8.0+
 
 
